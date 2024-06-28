@@ -58,7 +58,7 @@ docker run -d --name hl2dm-server \
   -e HL2DM_PORT=27015 \
   -e HL2DM_SOURCETVPORT="27020" \
   -e HL2DM_TICKRATE="" \
-  -v /home/ponfertato/Docker/hl2dm-server:/home/steam/halflife2deathmatch-server/hlds \
+  -v /home/ponfertato/Docker/hl2dm-server:/home/steam/hl2dm-server/hlds \
   ponfertato/hl2dm:latest
 ```
 
@@ -88,7 +88,7 @@ services:
       - HL2DM_SOURCETVPORT="27020"
       - HL2DM_TICKRATE=""
     volumes:
-      - ./hl2dm-server:/home/steam/halflife2deathmatch-server/hlds
+      - ./hl2dm-server:/home/steam/hl2dm-server/hlds
 ```
 
 **Health Check**
