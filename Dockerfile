@@ -1,12 +1,7 @@
-FROM sonroyaalmerol/steamcmd-arm64:root as build_stage
+FROM sonroyaalmerol/steamcmd-arm64:root AS build_stage
 
 LABEL maintainer="ponfertato@ya.ru"
-LABEL description="A Dockerised version of the Counter-Strike: Source dedicated server for ARM64 (using box86)"
-
-ENV STEAMAPPID 232370
-ENV STEAMAPP hl2dm
-ENV STEAMAPPDIR /home/steam/${STEAMAPP}-server
-ENV HOMEDIR /home/steam
+LABEL description="A Dockerised version of the Half-Life 2: Deathmatch dedicated server for ARM64 (using box86)"
 
 RUN dpkg --add-architecture amd64 \
     && dpkg --add-architecture i386 \
@@ -26,21 +21,23 @@ RUN dpkg --add-architecture amd64 \
     && wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_i386.deb \
     && dpkg -i libssl1.1_1.1.1f-1ubuntu2_i386.deb \
     && rm libssl1.1_1.1.1f-1ubuntu2_i386.deb \
-    && rm -rf /var/lib/apt/lists/* 
+    && rm -rf /var/lib/apt/lists/*
+
+ENV HOMEDIR="/home/steam" \
+    STEAMAPPID="232370" \
+    STEAMAPPDIR="/home/steam/hl2dm-server"
 
 COPY etc/entry.sh ${HOMEDIR}/entry.sh
 
 WORKDIR ${STEAMAPPDIR}
 
 RUN chmod +x "${HOMEDIR}/entry.sh" \
-    && chown -R "${USER}:${USER}" "${HOMEDIR}/entry.sh" "${STEAMAPPDIR}"
+    && chown -R "${USER}":"${USER}" "${HOMEDIR}/entry.sh" ${STEAMAPPDIR}
 
 FROM build_stage AS bookworm-root
 
-EXPOSE 27015/tcp 27015/udp 27005/udp 27020/udp
-
-ENV HL2DM_ARGS=""\
-	HL2DM_CLIENTPORT="27005" \
+ENV HL2DM_ARGS="" \
+    HL2DM_CLIENTPORT="27005" \
     HL2DM_IP="" \
     HL2DM_LAN="0" \
     HL2DM_MAP="dm_overwatch" \
@@ -49,11 +46,15 @@ ENV HL2DM_ARGS=""\
     HL2DM_SOURCETVPORT="27020" \
     HL2DM_TICKRATE=""
 
-USER ${USER}
+EXPOSE ${HL2DM_CLIENTPORT}/udp \
+    ${HL2DM_PORT}/tcp \
+    ${HL2DM_PORT}/udp \
+    ${HL2DM_SOURCETVPORT}/udp
 
+USER ${USER}
 WORKDIR ${HOMEDIR}
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD netstat -l | grep "27015.*LISTEN"
+    CMD netstat -l | grep "${HL2DM_PORT}.*LISTEN"
 
 CMD ["bash", "entry.sh"]
